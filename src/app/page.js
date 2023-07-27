@@ -1,47 +1,90 @@
-import Image from 'next/image'
+"use client";
+
+import Image from "next/image";
 // import styles from './page.module.css'
-import Link from 'next/link'
+import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
+  const [value, setValue] = useState("");
+  const [result, setResult] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  function getData(e) {
+    setLoading(true);
+    fetch(`https://localhost:7185/api/MovieItems?search=${value}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if(data.Search){
+          setResult(data.Search);
+        }else{
+          setResult([]);
+        }
+      })
+      .then(() => setLoading(false))
+      .catch((e) => {
+        setResult([]), setLoading(false);
+      });
+  }
   return (
     <div className="w-100">
-      <form class="row g-3 w-100">
-        <div class="col-10">
-          <input placeholder='Search by Name' type="text" className="form-control form-control-lg" />
+      <div className="row g-3 w-100">
+        <div className="col-10">
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Search by Name"
+            type="text"
+            className="form-control form-control-lg"
+          />
         </div>
-        <div class="col-2">
-          <button type="submit" className="btn btn-lg btn-outline-primary mb-3">Search</button>
+        <div className="col-2">
+          <button
+            type="button"
+            onClick={() => getData()}
+            className="btn btn-lg btn-outline-primary mb-3"
+          >
+            Search
+          </button>
         </div>
-      </form>
+      </div>
 
       <div className="my-5">
         <table className="table table-bordered">
-            <thead>
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Year</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
               <tr>
-                <th scope="col">Title</th>
-                <th scope="col">Year</th>
-                <th scope="col"></th>
+                <h1>LOADING...</h1>
               </tr>
-            </thead>
-            <tbody>
+            ) : result.length > 0 ? (
+              result.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.Title}</td>
+                  <td>{item.Year}</td>
+                  <td>
+                    <Link href={`/details/${item.imdbID}`}>
+                      <button className="btn btn-sm btn-outline-primary">
+                        View
+                      </button>
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
-                <td>Otto</td>
-                <td>@mdo</td>
-                <td><Link href="/details/20">Heehe</Link><button className="btn btn-sm btn-outline-primary">View</button></td>
+                <h1>NO RESULT FOUND</h1>
               </tr>
-              <tr>
-                <td>Thornton</td>
-                <td>@fat</td>
-                <td><button className="btn btn-sm btn-outline-primary">View</button></td>
-              </tr>
-              <tr>
-                <td>the Bird</td>
-                <td>@twitter</td>
-                <td><button className="btn btn-sm btn-outline-primary">View</button></td>
-              </tr>
-            </tbody>
+            )}
+          </tbody>
         </table>
       </div>
     </div>
-  )
+  );
 }
